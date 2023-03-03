@@ -29,6 +29,7 @@ set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_C_COMPILER> <LINK_FLAGS> -o <TARGET> <OBJECT
 
 set(STARTUP_LOCATION ${CMAKE_SOURCE_DIR}/startup/startup_stm32f401xc.s)
 
+include_directories(core)
 include_directories(app/inc)
 include_directories(system/inc)
 include_directories(lib/hal/inc)
