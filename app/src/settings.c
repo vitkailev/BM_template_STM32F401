@@ -1,3 +1,4 @@
+#include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_rcc.h"
 
 #include "settings.h"
@@ -23,10 +24,30 @@ static int settingSystemClock(void) {
     return 0;
 }
 
+static int settingGPIO(void) {
+    GPIO_InitTypeDef gpioInit = {0};
+    
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    gpioInit.Pin = GPIO_PIN_0;
+    gpioInit.Mode = GPIO_MODE_INPUT;
+    gpioInit.Pull = GPIO_PULLDOWN;
+    gpioInit.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOA, &gpioInit);
+
+    __HAL_RCC_GPIOD_CLK_ENABLE();
+    gpioInit.Pin = GPIO_PIN_12 | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15;
+    gpioInit.Mode = GPIO_MODE_OUTPUT_PP;
+    gpioInit.Pull = GPIO_PULLDOWN;
+    gpioInit.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOD, &gpioInit);
+    return 0;
+}
+
 int initialization(MCUDef *mcu) {
-    int32_t result = 0;
+    uint32_t result = 0;
     result |= settingSystemClock();
-    return result;
+    settingGPIO();
+    return (int) result;
 }
 
 
