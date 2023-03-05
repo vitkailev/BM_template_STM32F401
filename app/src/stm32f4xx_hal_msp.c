@@ -16,7 +16,7 @@
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
-  */ 
+  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
@@ -47,9 +47,9 @@
   *         level initialization (GPIOs, clock, DMA, interrupt).
   * @retval None
   */
-void HAL_MspInit(void)
-{
-
+void HAL_MspInit(void) {
+    __HAL_RCC_PWR_CLK_ENABLE();
+    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
 }
 
 /**
@@ -58,8 +58,19 @@ void HAL_MspInit(void)
   *         level de-initialization (GPIOs, clock, DMA, interrupt).
   * @retval None
   */
-void HAL_MspDeInit(void)
-{
+void HAL_MspDeInit(void) {
+
+}
+
+void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim) {
+    if (htim->Instance == TIM9) {
+        __HAL_RCC_TIM9_CLK_ENABLE();
+        HAL_NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, 5, 0);
+        HAL_NVIC_EnableIRQ(TIM1_BRK_TIM9_IRQn);
+    }
+}
+
+void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *htim) {
 
 }
 
@@ -69,8 +80,7 @@ void HAL_MspDeInit(void)
   *         peripheral(PPP) system level initialization (GPIOs, clock, DMA, interrupt)
   * @retval None
   */
-void HAL_PPP_MspInit(void)
-{
+void HAL_PPP_MspInit(void) {
 
 }
 
@@ -80,8 +90,7 @@ void HAL_PPP_MspInit(void)
   *         peripheral(PPP) system level de-initialization (GPIOs, clock, DMA, interrupt)
   * @retval None
   */
-void HAL_PPP_MspDeInit(void)
-{
+void HAL_PPP_MspDeInit(void) {
 
 }
 
@@ -96,5 +105,3 @@ void HAL_PPP_MspDeInit(void)
 /**
   * @}
   */
-
-
