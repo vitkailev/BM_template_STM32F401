@@ -1,7 +1,10 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_rcc.h"
+#include "stm32f4xx_hal_tim.h"
 
 #include "settings.h"
+
+static TIM_HandleTypeDef tim9Handle;
 
 static int settingSystemClock(void) {
     RCC_OscInitTypeDef oscInit = {0};
@@ -26,7 +29,7 @@ static int settingSystemClock(void) {
 
 static int settingGPIO(void) {
     GPIO_InitTypeDef gpioInit = {0};
-    
+
     __HAL_RCC_GPIOA_CLK_ENABLE();
     gpioInit.Pin = GPIO_PIN_0;
     gpioInit.Mode = GPIO_MODE_INPUT;
@@ -43,12 +46,31 @@ static int settingGPIO(void) {
     return 0;
 }
 
+static int settingTimer(TimerDef *timer) {
+    timer->obj = &tim9Handle;
+    TIM_HandleTypeDef *timInit = (TIM_HandleTypeDef *) timer->obj;
+    timInit->Instance = TIM9;
+    timInit->Init.Period = timer->freq;
+    timInit->Init.Prescaler = SystemCoreClock / timer->freq / 100 - 1;
+    timInit->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    timInit->Init.CounterMode = TIM_COUNTERMODE_UP;
+    timInit->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    timInit->Init.RepetitionCounter = 0;
+    if (HAL_TIM_Base_Init(timInit) != HAL_OK)
+        return 1;
+    return 0;
+}
+
 int initialization(MCUDef *mcu) {
     uint32_t result = 0;
     result |= settingSystemClock();
     settingGPIO();
+    result |= (settingTimer(&mcu->timer) << 1);
     return (int) result;
 }
 
-
-
+int turnOnInterrupts(MCUDef *mcu) {
+    if (HAL_TIM_Base_Start_IT((TIM_HandleTypeDef *) mcu->timer.obj) != HAL_OK)
+        return 1;
+    return 0;
+}

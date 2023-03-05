@@ -5,4 +5,6 @@
 
 int initialization(MCUDef *mcu);
 
+int turnOnInterrupts(MCUDef *mcu);
+
 #endif //SETTINGS_H
