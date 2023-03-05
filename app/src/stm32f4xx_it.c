@@ -22,6 +22,8 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_it.h"
 
+#include "variables.h"
+
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
@@ -125,4 +127,6 @@ void SysTick_Handler(void) {
 /*  file (startup_stm32f4xx.s).                                               */
 /******************************************************************************/
 
-
+void TIM1_BRK_TIM9_IRQHandler(void) {
+    HAL_TIM_IRQHandler((TIM_HandleTypeDef *) MCU.timer.obj);
+}
