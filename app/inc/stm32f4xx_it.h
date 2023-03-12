@@ -25,6 +25,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f4xx_hal.h"
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -47,6 +48,10 @@ void DebugMon_Handler(void);
 void PendSV_Handler(void);
 
 void SysTick_Handler(void);
+
+void TIM1_BRK_TIM9_IRQHandler(void);
+
+void USART2_IRQHandler(void);
 
 #ifdef __cplusplus
 }

@@ -19,8 +19,9 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f4xx_hal.h"
 #include "stm32f4xx_it.h"
+
+#include "uart.h"
 
 #include "variables.h"
 
@@ -129,4 +130,8 @@ void SysTick_Handler(void) {
 
 void TIM1_BRK_TIM9_IRQHandler(void) {
     HAL_TIM_IRQHandler((TIM_HandleTypeDef *) MCU.timer.obj);
+}
+
+void USART2_IRQHandler(void) {
+    HAL_UART_IRQHandler((UART_HandleTypeDef *) Terminal.obj);
 }
