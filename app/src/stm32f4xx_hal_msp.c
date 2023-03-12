@@ -71,7 +71,11 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim) {
 }
 
 void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *htim) {
-
+    if (htim->Instance == TIM9) {
+        __HAL_RCC_TIM9_FORCE_RESET();
+        __HAL_RCC_TIM9_RELEASE_RESET();
+        HAL_NVIC_DisableIRQ(TIM1_BRK_TIM9_IRQn);
+    }
 }
 
 void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
@@ -103,6 +107,15 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
 
         HAL_NVIC_DisableIRQ(USART2_IRQn);
     }
+}
+
+void HAL_CRC_MspInit(CRC_HandleTypeDef *hcrc) {
+    __HAL_RCC_CRC_CLK_ENABLE();
+}
+
+void HAL_CRC_MspDeInit(CRC_HandleTypeDef *hcrc) {
+    __HAL_RCC_CRC_FORCE_RESET();
+    __HAL_RCC_CRC_RELEASE_RESET();
 }
 
 /**

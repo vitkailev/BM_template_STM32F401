@@ -4,6 +4,7 @@
 
 static TIM_HandleTypeDef tim9Handle;
 static UART_HandleTypeDef uart2Handle;
+static CRC_HandleTypeDef crcHandle;
 
 static int settingSystemClock(void) {
     RCC_OscInitTypeDef oscInit = {0};
@@ -76,12 +77,22 @@ static int settingUART(UARTDef *uart) {
     return 0;
 }
 
+static int settingCRC(MCUDef *mcu) {
+    mcu->crc = &crcHandle;
+    CRC_HandleTypeDef *crcInit = (CRC_HandleTypeDef *) mcu->crc;
+    crcInit->Instance = CRC;
+    if (HAL_CRC_Init(crcInit) != HAL_OK)
+        return 1;
+    return 0;
+}
+
 int initialization(MCUDef *mcu, UARTDef *uart) {
     int32_t result = 0;
     result |= settingSystemClock();
     settingGPIO();
     result |= (settingTimer(&mcu->timer) << 1);
     result |= (settingUART(uart) << 2);
+    result |= (settingCRC(mcu) << 3);
     return result;
 }
 

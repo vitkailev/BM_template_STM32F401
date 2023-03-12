@@ -36,6 +36,7 @@ typedef struct {
     PortDef button;
     LEDDef leds[NUMBER_LEDS];
     TimerDef timer;
+    void *crc;
 } MCUDef;
 
 extern MCUDef MCU;
