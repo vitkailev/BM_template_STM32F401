@@ -1,10 +1,9 @@
 #include "stm32f4xx_hal.h"
-#include "stm32f4xx_hal_rcc.h"
-#include "stm32f4xx_hal_tim.h"
 
 #include "settings.h"
 
 static TIM_HandleTypeDef tim9Handle;
+static UART_HandleTypeDef uart2Handle;
 
 static int settingSystemClock(void) {
     RCC_OscInitTypeDef oscInit = {0};
@@ -61,16 +60,35 @@ static int settingTimer(TimerDef *timer) {
     return 0;
 }
 
-int initialization(MCUDef *mcu) {
-    uint32_t result = 0;
+static int settingUART(UARTDef *uart) {
+    uart->obj = &uart2Handle;
+    UART_HandleTypeDef *uartInit = (UART_HandleTypeDef *) uart->obj;
+    uartInit->Instance = USART2;
+    uartInit->Init.BaudRate = uart->speed;
+    uartInit->Init.WordLength = UART_WORDLENGTH_8B;
+    uartInit->Init.StopBits = UART_STOPBITS_1;
+    uartInit->Init.Parity = UART_PARITY_NONE;
+    uartInit->Init.Mode = UART_MODE_TX_RX;
+    uartInit->Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    uartInit->Init.OverSampling = UART_OVERSAMPLING_8;
+    if (HAL_UART_Init(uartInit) != HAL_OK)
+        return 1;
+    return 0;
+}
+
+int initialization(MCUDef *mcu, UARTDef *uart) {
+    int32_t result = 0;
     result |= settingSystemClock();
     settingGPIO();
     result |= (settingTimer(&mcu->timer) << 1);
-    return (int) result;
+    result |= (settingUART(uart) << 2);
+    return result;
 }
 
-int turnOnInterrupts(MCUDef *mcu) {
+int turnOnInterrupts(MCUDef *mcu, UARTDef *uart) {
     if (HAL_TIM_Base_Start_IT((TIM_HandleTypeDef *) mcu->timer.obj) != HAL_OK)
         return 1;
+    if (HAL_UART_Receive_IT((UART_HandleTypeDef *) uart->obj, &uart->rxByte, 1) != HAL_OK)
+        return 2;
     return 0;
 }

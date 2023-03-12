@@ -74,6 +74,37 @@ void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *htim) {
 
 }
 
+void HAL_UART_MspInit(UART_HandleTypeDef *huart) {
+    if (huart->Instance == USART2) {
+        __HAL_RCC_USART2_CLK_ENABLE();
+
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+
+        GPIO_InitTypeDef initGPIO;
+        initGPIO.Pin = GPIO_PIN_2 | GPIO_PIN_3;
+        initGPIO.Mode = GPIO_MODE_AF_PP;
+        initGPIO.Pull = GPIO_NOPULL;
+        initGPIO.Speed = GPIO_SPEED_FREQ_MEDIUM;
+        initGPIO.Alternate = GPIO_AF7_USART2;
+        HAL_GPIO_Init(GPIOA, &initGPIO);
+
+        HAL_NVIC_SetPriority(USART2_IRQn, 2, 0);
+        HAL_NVIC_EnableIRQ(USART2_IRQn);
+    }
+}
+
+void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
+    if (huart->Instance == USART2) {
+        __HAL_RCC_USART2_FORCE_RESET();
+        __HAL_RCC_USART2_RELEASE_RESET();
+
+        HAL_GPIO_DeInit(GPIOA, GPIO_PIN_2);
+        HAL_GPIO_DeInit(GPIOA, GPIO_PIN_3);
+
+        HAL_NVIC_DisableIRQ(USART2_IRQn);
+    }
+}
+
 /**
   * @brief  Initializes the PPP MSP.
   * @note   This functiona is called from HAL_PPP_Init() function to perform 
