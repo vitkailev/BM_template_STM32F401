@@ -23,3 +23,8 @@ void changeCounterValue(MCUDef *mcu) {
 int32_t getCounterValue(const MCUDef *mcu) {
     return mcu->counter;
 }
+
+uint32_t getCRC(MCUDef *mcu, const void *data, uint16_t size) {
+    // CRC-32/MPEG-2
+    return HAL_CRC_Calculate((CRC_HandleTypeDef *) mcu->crc, (uint32_t *) data, size);
+}

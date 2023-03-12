@@ -13,4 +13,6 @@ void changeCounterValue(MCUDef *mcu);
 
 int32_t getCounterValue(const MCUDef *mcu);
 
+uint32_t getCRC(MCUDef *mcu, const void *data, uint16_t size);
+
 #endif //FUNCTIONS_H
