@@ -9,4 +9,8 @@ bool getPinState(const PortDef *port);
 
 bool isTimerTriggered(const TimerDef *timer);
 
+void changeCounterValue(MCUDef *mcu);
+
+int32_t getCounterValue(const MCUDef *mcu);
+
 #endif //FUNCTIONS_H

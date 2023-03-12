@@ -31,6 +31,8 @@ typedef struct {
 } TimerDef;
 
 typedef struct {
+    int32_t counter;
+
     PortDef button;
     LEDDef leds[NUMBER_LEDS];
     TimerDef timer;

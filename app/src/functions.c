@@ -1,5 +1,4 @@
 #include "stm32f4xx_hal.h"
-#include "stm32f4xx_hal_gpio.h"
 
 #include "functions.h"
 
@@ -15,4 +14,12 @@ bool isTimerTriggered(const TimerDef *timer) {
     return timer->isTriggered;
 }
 
+void changeCounterValue(MCUDef *mcu) {
+    mcu->counter++;
+    if (mcu->counter < 0)
+        mcu->counter = 0;
+}
 
+int32_t getCounterValue(const MCUDef *mcu) {
+    return mcu->counter;
+}
