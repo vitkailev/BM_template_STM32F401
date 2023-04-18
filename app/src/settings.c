@@ -4,6 +4,7 @@
 
 static TIM_HandleTypeDef tim9Handle;
 static UART_HandleTypeDef uart2Handle;
+static I2C_HandleTypeDef i2c3Handle;
 static CRC_HandleTypeDef crcHandle;
 
 static int settingSystemClock(void) {
@@ -77,6 +78,21 @@ static int settingUART(UARTDef *uart) {
     return 0;
 }
 
+static int settingI2C(I2CDef *i2c) {
+    i2c->obj = &i2c3Handle;
+    I2C_HandleTypeDef *i2cInit = (I2C_HandleTypeDef *) i2c->obj;
+    i2cInit->Init.ClockSpeed = 100000;
+    i2cInit->Init.DutyCycle = I2C_DUTYCYCLE_2;
+    i2cInit->Init.OwnAddress1 = 11;
+    i2cInit->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    i2cInit->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    i2cInit->Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    i2cInit->Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+    if (HAL_I2C_Init(i2cInit) != HAL_OK)
+        return 1;
+    return 0;
+}
+
 static int settingCRC(MCUDef *mcu) {
     mcu->crc = &crcHandle;
     CRC_HandleTypeDef *crcInit = (CRC_HandleTypeDef *) mcu->crc;
@@ -86,13 +102,14 @@ static int settingCRC(MCUDef *mcu) {
     return 0;
 }
 
-int initialization(MCUDef *mcu, UARTDef *uart) {
+int initialization(MCUDef *mcu, UARTDef *uart, I2CDef *i2c) {
     int32_t result = 0;
     result |= settingSystemClock();
     settingGPIO();
     result |= (settingTimer(&mcu->timer) << 1);
     result |= (settingUART(uart) << 2);
-    result |= (settingCRC(mcu) << 3);
+    result |= (settingI2C(i2c) << 3);
+    result |= (settingCRC(mcu) << 4);
     return result;
 }
 
