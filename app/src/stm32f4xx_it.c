@@ -22,6 +22,7 @@
 #include "stm32f4xx_it.h"
 
 #include "uart.h"
+#include "i2c.h"
 
 #include "variables.h"
 
@@ -134,4 +135,12 @@ void TIM1_BRK_TIM9_IRQHandler(void) {
 
 void USART2_IRQHandler(void) {
     HAL_UART_IRQHandler((UART_HandleTypeDef *) Terminal.obj);
+}
+
+void I2C3_EV_IRQHandler(void) {
+    HAL_I2C_EV_IRQHandler((I2C_HandleTypeDef *) I2CBus1.obj);
+}
+
+void I2C3_ER_IRQHandler(void) {
+    HAL_I2C_ER_IRQHandler((I2C_HandleTypeDef *) I2CBus1.obj);
 }

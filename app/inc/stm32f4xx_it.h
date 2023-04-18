@@ -53,6 +53,10 @@ void TIM1_BRK_TIM9_IRQHandler(void);
 
 void USART2_IRQHandler(void);
 
+void I2C3_EV_IRQHandler(void);
+
+void I2C3_ER_IRQHandler(void);
+
 #ifdef __cplusplus
 }
 #endif
