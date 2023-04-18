@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    stm32f4xx_hal_msp_template.c
+  * @file    stm32f4xx_hal_msp.c
   * @author  MCD Application Team
   * @brief   This file contains the HAL System and Peripheral (PPP) MSP initialization
   *          and de-initialization functions.
@@ -106,6 +106,43 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
         HAL_GPIO_DeInit(GPIOA, GPIO_PIN_3);
 
         HAL_NVIC_DisableIRQ(USART2_IRQn);
+    }
+}
+
+void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
+    if (hi2c->Instance == I2C3) {
+        __HAL_RCC_I2C3_CLK_ENABLE();
+
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+
+        GPIO_InitTypeDef initGPIO;
+        initGPIO.Mode = GPIO_MODE_AF_OD;
+        initGPIO.Pull = GPIO_PULLUP;
+        initGPIO.Speed = GPIO_SPEED_FREQ_MEDIUM;
+        initGPIO.Alternate = GPIO_AF4_I2C3;
+        initGPIO.Pin = GPIO_PIN_8;
+        HAL_GPIO_Init(GPIOA, &initGPIO);
+        initGPIO.Pin = GPIO_PIN_9;
+        HAL_GPIO_Init(GPIOC, &initGPIO);
+
+        HAL_NVIC_SetPriority(I2C3_EV_IRQn, 1, 0);
+        HAL_NVIC_EnableIRQ(I2C3_EV_IRQn);
+        HAL_NVIC_SetPriority(I2C3_ER_IRQn, 4, 0);
+        HAL_NVIC_EnableIRQ(I2C3_ER_IRQn);
+    }
+}
+
+void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c) {
+    if (hi2c->Instance == I2C3) {
+        __HAL_RCC_I2C3_FORCE_RESET();
+        __HAL_RCC_I2C3_RELEASE_RESET();
+
+        HAL_GPIO_DeInit(GPIOA, GPIO_PIN_8);
+        HAL_GPIO_DeInit(GPIOC, GPIO_PIN_9);
+
+        HAL_NVIC_DisableIRQ(I2C3_EV_IRQn);
+        HAL_NVIC_DisableIRQ(I2C3_ER_IRQn);
     }
 }
 
