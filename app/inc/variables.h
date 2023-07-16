@@ -1,9 +1,16 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
+
+#include "uart.h"
+#include "i2c.h"
 
 enum LED_Types {
     LED_GREEN,
@@ -40,5 +47,11 @@ typedef struct {
 } MCUDef;
 
 extern MCUDef MCU;
+extern UARTDef Terminal;
+extern I2CDef I2C3Bus;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //VARIABLES_H
