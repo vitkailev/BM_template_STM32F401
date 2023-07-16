@@ -26,6 +26,13 @@ typedef struct {
 } PortDef;
 
 typedef struct {
+    bool isTriggered;
+    bool state;
+    uint16_t delay;
+    PortDef port;
+} ButtonDef;
+
+typedef struct {
     bool state;
     uint8_t mode;
     PortDef port;
@@ -40,7 +47,7 @@ typedef struct {
 typedef struct {
     int32_t counter;
 
-    PortDef button;
+    ButtonDef button;
     LEDDef leds[NUMBER_LEDS];
     TimerDef timer;
     void *crc;
