@@ -10,6 +10,29 @@ bool getPinState(const PortDef *port) {
     return HAL_GPIO_ReadPin((GPIO_TypeDef *) port->obj, port->pin);
 }
 
+bool isButtonPressed(const ButtonDef *bt) {
+    return bt->isTriggered;
+}
+
+void checkButtonState(ButtonDef *bt) {
+    if (getPinState(&bt->port))
+        bt->delay++;
+    else {
+        bt->delay = 0;
+
+        // uncomment, if you need to detect release event
+//        bt->isTriggered = bt->state;
+
+        bt->state = false;
+    }
+
+    uint16_t duration = 5; // 50 ms, main timer - 100 Hz
+    if (bt->delay == duration) {
+        bt->isTriggered = !bt->state;
+        bt->state = true;
+    }
+}
+
 bool isTimerTriggered(const TimerDef *timer) {
     return timer->isTriggered;
 }

@@ -7,6 +7,10 @@ void changePinState(PortDef *port, bool state);
 
 bool getPinState(const PortDef *port);
 
+bool isButtonPressed(const ButtonDef *bt);
+
+void checkButtonState(ButtonDef *bt);
+
 bool isTimerTriggered(const TimerDef *timer);
 
 void changeCounterValue(MCUDef *mcu);
