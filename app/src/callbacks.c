@@ -1,8 +1,5 @@
 #include "stm32f4xx_hal.h"
 
-#include "uart.h"
-#include "i2c.h"
-
 #include "functions.h"
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
@@ -13,7 +10,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart) {
     if (huart->Instance == ((UART_HandleTypeDef *) Terminal.obj)->Instance) {
-        sendUARTByte(&Terminal);
+        sendUARTData(&Terminal);
     }
 }
 
@@ -30,19 +27,19 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
 }
 
 void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef *hi2c) {
-    if (hi2c->Instance == ((I2C_HandleTypeDef *) I2CBus1.obj)->Instance) {
-        I2CBus1.isWriting = false;
+    if (hi2c->Instance == ((I2C_HandleTypeDef *) I2C3Bus.obj)->Instance) {
+        I2C3Bus.isWriting = false;
     }
 }
 
 void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef *hi2c) {
-    if (hi2c->Instance == ((I2C_HandleTypeDef *) I2CBus1.obj)->Instance) {
-        I2CBus1.isReading = false;
+    if (hi2c->Instance == ((I2C_HandleTypeDef *) I2C3Bus.obj)->Instance) {
+        I2C3Bus.isReading = false;
     }
 }
 
 void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
-    if (hi2c->Instance == ((I2C_HandleTypeDef *) I2CBus1.obj)->Instance) {
-        I2CBus1.error++;
+    if (hi2c->Instance == ((I2C_HandleTypeDef *) I2C3Bus.obj)->Instance) {
+        I2C3Bus.error++;
     }
 }

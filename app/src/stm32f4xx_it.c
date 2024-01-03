@@ -21,9 +21,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_it.h"
 
-#include "uart.h"
-#include "i2c.h"
-
 #include "variables.h"
 
 /* Private typedef -----------------------------------------------------------*/
@@ -138,9 +135,9 @@ void USART2_IRQHandler(void) {
 }
 
 void I2C3_EV_IRQHandler(void) {
-    HAL_I2C_EV_IRQHandler((I2C_HandleTypeDef *) I2CBus1.obj);
+    HAL_I2C_EV_IRQHandler((I2C_HandleTypeDef *) I2C3Bus.obj);
 }
 
 void I2C3_ER_IRQHandler(void) {
-    HAL_I2C_ER_IRQHandler((I2C_HandleTypeDef *) I2CBus1.obj);
+    HAL_I2C_ER_IRQHandler((I2C_HandleTypeDef *) I2C3Bus.obj);
 }
