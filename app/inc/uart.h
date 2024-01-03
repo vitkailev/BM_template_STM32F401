@@ -1,13 +1,16 @@
 #ifndef UART_H
 #define UART_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
 
 enum UART_Constants {
     UART_RX_BUFFER_SIZE = 512,
-    UART_TX_BUFFER_SIZE = 128,
     UART_TX_QUEUE_SIZE = 1024
 };
 
@@ -15,26 +18,23 @@ typedef struct {
     bool isInit;
     bool isHaveData;
     bool isWriting;
+    volatile bool isReading;
 
     uint32_t speed;
     uint32_t error;
 
-    uint8_t *volatile txHead;
-    uint8_t *txTail;
-
     uint8_t rxByte;
-    volatile bool isReading;
     volatile int32_t counter;
     volatile uint16_t rxSize;
     uint8_t rxBuffer[UART_RX_BUFFER_SIZE];
 
-    uint16_t txSize;
-    uint8_t txBuffer[UART_TX_BUFFER_SIZE];
+    uint8_t *volatile txHead;
+    uint8_t *txTail;
+    volatile uint16_t nSent;
+    uint8_t txQueue[UART_TX_QUEUE_SIZE];
 
     void *obj;
 } UARTDef;
-
-extern UARTDef Terminal;
 
 int initUART(UARTDef *uart, uint32_t speed);
 
@@ -48,6 +48,10 @@ void updateUART(UARTDef *uart, int32_t counter);
 
 void saveUARTByte(UARTDef *uart, int32_t counter);
 
-void sendUARTByte(UARTDef *uart);
+void sendUARTData(UARTDef *uart);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //UART_H
