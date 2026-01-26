@@ -36,7 +36,7 @@ typedef struct {
     volatile int32_t time; // msec.
     volatile uint16_t size; // bytes
     uint8_t rxByte;
-    uint8_t rxBuffer[UART_BUFFER_SIZE];
+    uint8_t buffer[UART_BUFFER_SIZE];
 
     // tx
     uint16_t nSent; // bytes
@@ -59,4 +59,4 @@ void UART_update(UARTDef *uart, uint32_t counter);
 }
 #endif
 
-#endif //UART_H
+#endif // UART_H
