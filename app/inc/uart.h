@@ -5,50 +5,55 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stddef.h>
 
 enum UART_Constants {
-    UART_RX_BUFFER_SIZE = 512,
-    UART_TX_QUEUE_SIZE = 1024
+    UART_BUFFER_SIZE = 512,
+    UART_QUEUE_SIZE = 1024,
+
+    UART_TIMEDELAY_AFTER_LAST_SYMBOL = 5, // msec.
+};
+
+enum UART_Errors {
+    UART_SUCCESS = 0,
+    UART_NOT_INIT = -1,
+    UART_WRONG_DATA = -2,
+    UART_QUEUE_FULL = -3,
+    UART_NOT_ALL_DATA = -4,
 };
 
 typedef struct {
     bool isInit;
     bool isHaveData;
-    bool isWriting;
     volatile bool isReading;
+    volatile bool isWriting;
+    volatile uint32_t errType;
+    volatile uint32_t errors;
 
-    uint32_t speed;
-    uint32_t error;
-
+    // rx
+    volatile int32_t time; // msec.
+    volatile uint16_t size; // bytes
     uint8_t rxByte;
-    volatile int32_t counter;
-    volatile uint16_t rxSize;
-    uint8_t rxBuffer[UART_RX_BUFFER_SIZE];
+    uint8_t rxBuffer[UART_BUFFER_SIZE];
 
-    uint8_t *volatile txHead;
-    uint8_t *txTail;
-    volatile uint16_t nSent;
-    uint8_t txQueue[UART_TX_QUEUE_SIZE];
+    // tx
+    uint16_t nSent; // bytes
+    uint8_t *volatile head;
+    uint8_t *tail;
+    uint8_t queue[UART_QUEUE_SIZE];
 
-    void *obj;
+    void *handle;
 } UARTDef;
 
-int initUART(UARTDef *uart, uint32_t speed);
+int UART_init(UARTDef *uart);
 
-bool isUARTHaveData(const UARTDef *uart);
+bool UART_isHaveData(const UARTDef *uart);
 
-bool isUARTWriting(const UARTDef *uart);
+int UART_writeData(UARTDef *uart, const void *data, uint16_t size);
 
-int writeUARTData(UARTDef *uart, const void *data, uint16_t size);
-
-void updateUART(UARTDef *uart, int32_t counter);
-
-void saveUARTByte(UARTDef *uart, int32_t counter);
-
-void sendUARTData(UARTDef *uart);
+void UART_update(UARTDef *uart, uint32_t counter);
 
 #ifdef __cplusplus
 }

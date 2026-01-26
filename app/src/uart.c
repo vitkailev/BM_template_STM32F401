@@ -1,126 +1,138 @@
-#include <stdlib.h>
-
 #include "stm32f4xx_hal.h"
 
 #include "uart.h"
 
-static int32_t getCounter(const UARTDef *uart) {
-    return uart->counter;
+/**
+ * @brief Check, that the UART interface is initialized
+ * @param uart is the base UART data structure
+ * @return True - UART interface has been initialized, otherwise - False
+ */
+static bool isInit(const UARTDef *uart) {
+    return uart->isInit;
 }
 
+/**
+ * @brief Check, that the UART interface is reading a new package
+ * @param uart is the base UART data structure
+ * @return True - is reading, otherwise - False
+ */
 static bool isReading(const UARTDef *uart) {
     return uart->isReading;
 }
 
-static bool isQueueEmpty(const UARTDef *uart) {
-    return (uart->txTail == uart->txHead);
-}
-
-static bool isQueueFull(const UARTDef *uart) {
-    if (uart->txHead == uart->txQueue && uart->txTail == uart->txQueue + UART_TX_QUEUE_SIZE)
-        return true;
-    else
-        return (uart->txHead == uart->txTail + 1);
-}
-
-static void sendMaxNumberOfBytes(UARTDef *uart) {
-    int size = 0;
-    if (uart->txTail > uart->txHead)
-        size = uart->txTail - uart->txHead;
-    else
-        size = uart->txQueue + UART_TX_QUEUE_SIZE - uart->txHead;
-
-    uart->nSent = (uint16_t) size;
-
-    // MCU specific code
-    HAL_UART_Transmit_IT((UART_HandleTypeDef *) uart->obj, uart->txHead, uart->nSent);
-}
-
-static bool isInitialized(const UARTDef *uart) {
-    return uart->isInit;
-}
-
-int initUART(UARTDef *uart, uint32_t speed) {
-    uart->speed = speed;
-
-    uart->txHead = uart->txQueue;
-    uart->txTail = uart->txQueue;
-
-    uart->isInit = true;
-    return 0;
-}
-
-bool isUARTHaveData(const UARTDef *uart) {
-    return uart->isHaveData;
-}
-
-bool isUARTWriting(const UARTDef *uart) {
+/**
+ * @brief Check, that the UART interface is sending data
+ * @param uart is the base UART data structure
+ * @return True - is writing, otherwise - False
+ */
+static bool isWriting(const UARTDef *uart) {
     return uart->isWriting;
 }
 
-int writeUARTData(UARTDef *uart, const void *data, uint16_t size) {
-    if (!isInitialized(uart))
-        return -1;
-    if (data == NULL || size == 0 || size > UART_TX_QUEUE_SIZE)
-        return -2;
-
-    if (uart->txTail == (uart->txQueue + UART_TX_QUEUE_SIZE) && uart->txHead != uart->txQueue)
-        uart->txTail = uart->txQueue;
-
-    if (isQueueFull(uart))
-        return -3;
-
-    for (uint16_t i = 0; i < size; ++i) {
-        *uart->txTail++ = *((uint8_t *) data + i);
-
-        if (uart->txTail == (uart->txQueue + UART_TX_QUEUE_SIZE) && uart->txHead != uart->txQueue)
-            uart->txTail = uart->txQueue;
-
-        if (isQueueFull(uart))
-            return i;
-    }
-    return 0;
+/**
+ * @brief Check, that the output queue is empty
+ * @param uart is the base UART data structure
+ * @return True - is empty, otherwise - False
+ */
+static bool isQueueEmpty(const UARTDef *uart) {
+    return (uart->tail == uart->head);
 }
 
-void updateUART(UARTDef *uart, int32_t counter) {
-    if (!isInitialized(uart))
+/**
+ * @brief Check, that the output queue is full
+ * @param uart is the base UART data structure
+ * @return True - is full, otherwise - False
+ */
+static bool isQueueFull(const UARTDef *uart) {
+    if (uart->head == uart->queue && uart->tail == uart->queue + UART_QUEUE_SIZE)
+        return true;
+
+    return (uart->tail + 1 == uart->head);
+}
+
+/**
+ * @brief Send a new data chunk from the output queue to the UART module
+ * @param uart is the base UART data structure
+ */
+static void sendData(UARTDef *uart) {
+    size_t size = 0;
+    if (uart->tail > uart->head)
+        size = uart->tail - uart->head;
+    else
+        size = uart->queue + UART_QUEUE_SIZE - uart->head;
+
+    uart->nSent = (uint16_t) size;
+
+    uart->isWriting = true;
+    HAL_UART_Transmit_IT((UART_HandleTypeDef *) uart->handle, uart->head, uart->nSent);
+}
+
+/**
+ * @brief UART interface initialization
+ * @param uart is the base UART data structure
+ * @return UART_SUCCESS
+ */
+int UART_init(UARTDef *uart) {
+    uart->head = uart->queue;
+    uart->tail = uart->queue;
+    uart->isInit = true;
+    return UART_SUCCESS;
+}
+
+/**
+ * @brief Check, that UART interface has a new package
+ * @param uart is the base UART data structure
+ * @return True - UART interface has received a package, otherwise - False
+ */
+bool UART_isHaveData(const UARTDef *uart) {
+    return uart->isHaveData;
+}
+
+/**
+ * @brief Put the target data to the UART interface output queue (for sending)
+ * @param uart is the base UART data structure
+ * @param data is the target data
+ * @param size is the target data size (bytes)
+ * @return UART_Errors value
+ */
+int UART_writeData(UARTDef *uart, const void *data, uint16_t size) {
+    if (!isInit(uart))
+        return UART_NOT_INIT;
+    if (data == NULL || size == 0 || size > UART_QUEUE_SIZE)
+        return UART_WRONG_DATA;
+
+    if (uart->tail == (uart->queue + UART_QUEUE_SIZE) && uart->head != uart->queue)
+        uart->tail = uart->queue;
+
+    if (isQueueFull(uart))
+        return UART_QUEUE_FULL;
+
+    for (size_t i = 0; i < size; ++i) {
+        *uart->tail++ = *((uint8_t *) data + i);
+
+        if (uart->tail == (uart->queue + UART_QUEUE_SIZE) && uart->head != uart->queue)
+            uart->tail = uart->queue;
+
+        if (isQueueFull(uart))
+            return UART_NOT_ALL_DATA;
+    }
+    return UART_SUCCESS;
+}
+
+/**
+ * @brief Update the UART interface current state
+ * @param uart is the base UART data structure
+ * @param currentTime is the runtime value (msec.)
+ */
+void UART_update(UARTDef *uart, uint32_t currentTime) {
+    if (!isInit(uart))
         return;
 
-    uint16_t duration = 2; // pause after last received byte - 20ms (the main timer - 100Hz)
-    if (isReading(uart) && abs(counter - getCounter(uart)) >= duration) {
+    if (isReading(uart) && (currentTime - uart->time) >= UART_TIMEDELAY_AFTER_LAST_SYMBOL) {
         uart->isReading = false;
         uart->isHaveData = true;
     }
 
-    if (isQueueEmpty(uart))
-        uart->isWriting = false;
-    else if (!isUARTWriting(uart)) {
-        uart->isWriting = true;
-        sendMaxNumberOfBytes(uart);
-    }
-}
-
-void saveUARTByte(UARTDef *uart, int32_t counter) {
-    if (!isReading(uart))
-        uart->rxSize = 0;
-
-    uart->isReading = true;
-    uart->counter = counter;
-    *(uart->rxBuffer + uart->rxSize++) = uart->rxByte;
-    if (uart->rxSize == UART_RX_BUFFER_SIZE)
-        uart->rxSize = 0;
-
-    // MCU specific code
-    HAL_UART_Receive_IT((UART_HandleTypeDef *) uart->obj, &uart->rxByte, 1);
-}
-
-void sendUARTData(UARTDef *uart) {
-    uart->txHead += uart->nSent;
-    if (uart->txHead == (uart->txQueue + UART_TX_QUEUE_SIZE))
-        uart->txHead = uart->txQueue;
-
-    if (isQueueEmpty(uart))
-        return;
-
-    sendMaxNumberOfBytes(uart);
+    if (!isWriting(uart) && !isQueueEmpty(uart))
+        sendData(uart);
 }
