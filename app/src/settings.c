@@ -6,6 +6,7 @@ static TIM_HandleTypeDef timer4Handle;
 static TIM_HandleTypeDef timer11Handle;
 static ADC_HandleTypeDef adcHandle;
 static UART_HandleTypeDef uart1Handle;
+static I2C_HandleTypeDef i2c3Handle;
 static CRC_HandleTypeDef crcHandle;
 static IWDG_HandleTypeDef wdtHandle;
 
@@ -225,6 +226,30 @@ static int settingUART(UARTDef *uart) {
 }
 
 /**
+ * @brief Setting I2C modules
+ * @param i2c is the I2CDef data structure
+ * @return SETTING_SUCCESS or SETTING_ERROR
+ */
+static int settingI2C(I2CDef *i2c) {
+    i2c->handle = (void *) &i2c3Handle;
+
+    I2C_HandleTypeDef *i2cInit = (I2C_HandleTypeDef *) i2c->handle;
+    i2cInit->Instance = I2C3;
+    i2cInit->Init.ClockSpeed = 100000;
+    i2cInit->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    i2cInit->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    i2cInit->Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    i2cInit->Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+    i2cInit->Init.DutyCycle = I2C_DUTYCYCLE_2;
+    i2cInit->Init.OwnAddress1 = 0x69 << 1;
+    i2cInit->Init.OwnAddress2 = 0x42 << 1;
+    if (HAL_I2C_Init(i2cInit) != HAL_OK)
+        return SETTING_ERROR;
+
+    return SETTING_SUCCESS;
+}
+
+/**
  * @brief Setting Cyclic-Redundancy-Check (CRC) module
  * @param mcu is the base MCU data structure
  * @return SETTING_SUCCESS or SETTING_ERROR
@@ -270,6 +295,7 @@ int initialization(McuDef *mcu) {
     } else if (SETTING_SUCCESS != settingADC(&mcu->adc)) {
     } else if (SETTING_SUCCESS != settingPWM(&mcu->pwmTimer)) {
     } else if (SETTING_SUCCESS != settingUART(&mcu->uart)) {
+    } else if (SETTING_SUCCESS != settingI2C(&mcu->i2c)) {
     } else if (SETTING_SUCCESS != settingCRC(mcu)) {
     } else if (SETTING_SUCCESS != settingWDT(mcu)) {
     } else {

@@ -205,6 +205,53 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart) {
 }
 
 /**
+ * @brief Initialize the I2C interfaces, turn ON a clock source, setup GPIO and interrupt vector
+ * @param hi2c is the pointer to the data structure of the I2C handle (HAL).
+ */
+void HAL_I2C_MspInit(I2C_HandleTypeDef *hi2c) {
+    GPIO_InitTypeDef initGPIO = {0};
+    initGPIO.Mode = GPIO_MODE_AF_OD;
+    initGPIO.Pull = GPIO_PULLUP;
+    initGPIO.Speed = GPIO_SPEED_FREQ_HIGH;
+    initGPIO.Alternate = GPIO_AF4_I2C3;
+
+    if (hi2c->Instance == I2C3) {
+        __HAL_RCC_I2C3_CLK_ENABLE();
+
+        __HAL_RCC_GPIOA_CLK_ENABLE();
+        initGPIO.Pin = GPIO_PIN_8;
+        HAL_GPIO_Init(GPIOA, &initGPIO);
+
+        __HAL_RCC_GPIOC_CLK_ENABLE();
+        initGPIO.Pin = GPIO_PIN_9;
+        HAL_GPIO_Init(GPIOC, &initGPIO);
+
+        HAL_NVIC_SetPriority(I2C3_EV_IRQn, 4, 0);
+        HAL_NVIC_EnableIRQ(I2C3_EV_IRQn);
+        HAL_NVIC_SetPriority(I2C3_ER_IRQn, 4, 0);
+        HAL_NVIC_EnableIRQ(I2C3_ER_IRQn);
+    }
+}
+
+/**
+ * @brief DeInitialize the I2C interfaces
+ * @param hi2c is the pointer to the data structure of the I2C handle (HAL).
+ */
+void HAL_I2C_MspDeInit(I2C_HandleTypeDef *hi2c) {
+    if (hi2c->Instance == I2C3) {
+        __HAL_RCC_I2C3_FORCE_RESET();
+        __HAL_RCC_I2C3_RELEASE_RESET();
+        __HAL_RCC_I2C3_CLK_DISABLE();
+
+        HAL_GPIO_DeInit(GPIOA, GPIO_PIN_8);
+        HAL_GPIO_DeInit(GPIOC, GPIO_PIN_9);
+
+        HAL_NVIC_DisableIRQ(I2C3_EV_IRQn);
+        HAL_NVIC_DisableIRQ(I2C3_ER_IRQn);
+    }
+}
+
+/**
  * @brief Initialize the CRC module, turn ON a clock source
  * @param hcrc is the pointer to the data structure of the CRC handle (HAL).
  */
