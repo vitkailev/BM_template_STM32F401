@@ -1,69 +1,99 @@
-#include <string.h>
-
 #include "stm32f4xx_hal.h"
 
-#include "main.h"
 #include "settings.h"
 #include "functions.h"
 
-int main(void) {
-    int32_t err = 0;
-    startSettings();
-    if ((err = HAL_Init()))
-        error(err);
-    if ((err = initialization(&MCU, &Terminal, &I2C3Bus)))
-        error(err);
-    if ((err = turnOnInterrupts(&MCU, &Terminal)))
-        error(err);
+McuDef Mcu;
 
-    changePinState(&MCU.leds[LED_RED].port, true);
-    while (true) {
+static int initPeripheral(void);
+
+static void application(void);
+
+int main(void) {
+    HAL_Init();
+    initPeripheral();
+
+    if (__HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST))
+        Mcu.flags.isWDTTriggered = true;
+    __HAL_RCC_CLEAR_RESET_FLAGS();
+
+    changePinState(&Mcu.leds[LED_RED], true);
+
+    while (1) {
+        HAL_IWDG_Refresh((IWDG_HandleTypeDef *) Mcu.handles.wdt);
+
         application();
     }
     return 1;
 }
 
-void application(void) {
-    if (isTimerTriggered(&MCU.timer)) {
-        MCU.timer.isTriggered = false;
+static void application(void) {
+    if (Mcu.flags.isWDTTriggered) {
+        Mcu.flags.isWDTTriggered = false;
+    }
+    if (Mcu.flags.isSysTickTriggered) {
+        Mcu.flags.isSysTickTriggered = false;
 
-        changeCounterValue(&MCU);
-        checkButtonState(&MCU.button);
+        checkPinState(&Mcu.button[BUTTON_1]);
+    }
+    if (Mcu.measTimer.isTriggered) {
+        Mcu.measTimer.isTriggered = false;
 
-        // Usual time page write - 5 ms
-        updateI2CBus(&I2C3Bus);
+        readAnalogValues(&Mcu.adc);
+    }
+    if (isPinTriggered(&Mcu.button[BUTTON_1])) {
+        Mcu.button[BUTTON_1].isTriggered = false;
+    }
+    if (isADCFinished(&Mcu.adc)) {
+        Mcu.adc.isFinished = false;
+
+        convertADCResults(&Mcu.adc);
     }
 
-    if (isButtonPressed(&MCU.button)) {
-        MCU.button.isTriggered = false;
-    }
-
-    updateUART(&Terminal, getCounterValue(&MCU));
-    if (isUARTHaveData(&Terminal)) {
-        Terminal.isHaveData = false;
-
-        writeUARTData(&Terminal, Terminal.rxBuffer, Terminal.rxSize);
-    }
-}
-
-void startSettings(void) {
-    MCU.button.port.pin = GPIO_PIN_0;
-    MCU.button.port.obj = GPIOA;
-    MCU.leds[LED_GREEN].port.pin = GPIO_PIN_12;
-    MCU.leds[LED_GREEN].port.obj = GPIOD;
-    MCU.leds[LED_ORANGE].port.pin = GPIO_PIN_13;
-    MCU.leds[LED_ORANGE].port.obj = GPIOD;
-    MCU.leds[LED_RED].port.pin = GPIO_PIN_14;
-    MCU.leds[LED_RED].port.obj = GPIOD;
-    MCU.leds[LED_BLUE].port.pin = GPIO_PIN_15;
-    MCU.leds[LED_BLUE].port.obj = GPIOD;
-    MCU.timer.freq = 100; // Hz
-
-    initUART(&Terminal, 115200);
-}
-
-void error(int32_t errCode) {
-    while (true) {
-
+    UART_update(&Mcu.uart, HAL_GetTick());
+    if (UART_isHaveData(&Mcu.uart)) {
     }
 }
+
+static int initPeripheral(void) {
+    Mcu.leds[LED_GREEN].pin = GPIO_PIN_12;
+    Mcu.leds[LED_GREEN].handle = GPIOD;
+    Mcu.leds[LED_ORANGE].pin = GPIO_PIN_13;
+    Mcu.leds[LED_ORANGE].handle = GPIOD;
+    Mcu.leds[LED_RED].pin = GPIO_PIN_14;
+    Mcu.leds[LED_RED].handle = GPIOD;
+    Mcu.leds[LED_BLUE].pin = GPIO_PIN_15;
+    Mcu.leds[LED_BLUE].handle = GPIOD;
+    Mcu.button[BUTTON_1].duration = 50; // ms
+    Mcu.button[BUTTON_1].pin = GPIO_PIN_0;
+    Mcu.button[BUTTON_1].handle = GPIOA;
+
+    UART_init(&Mcu.uart);
+    I2C_init(&Mcu.i2c);
+
+    if (SETTING_SUCCESS == initialization(&Mcu)) {
+        HAL_TIM_PWM_Start((TIM_HandleTypeDef *) Mcu.pwmTimer.handle, TIM_CHANNEL_3);
+        setPWMDutyCycle(&Mcu.pwmTimer, TIM_CHANNEL_3, 37);
+
+        HAL_TIM_Base_Start_IT((TIM_HandleTypeDef *) Mcu.measTimer.handle);
+    }
+    return 0;
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line) {
+    /* User can add his own implementation to report the file name and line number,
+       ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+
+    /* Infinite loop */
+    while (1) {
+    }
+}
+#endif

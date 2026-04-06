@@ -1,10 +1,21 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "variables.h"
 
-int initialization(MCUDef *mcu, UARTDef *uart, I2CDef *i2c);
+enum Settings_Constants {
+    SETTING_SUCCESS = 0,
+    SETTING_ERROR = -1
+};
 
-int turnOnInterrupts(MCUDef *mcu, UARTDef *uart);
+int initialization(McuDef * mcu);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //SETTINGS_H
