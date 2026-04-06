@@ -89,6 +89,42 @@ int readAnalogValues(AdcDef *adc) {
 }
 
 /**
+ * @brief Convert relative ADC values to the "real" values (mV and degrees)
+ * @param adc is the base ADC data structure
+ * @return HAL_OK - ADC values have been converted, otherwise - HAL_BUSY
+ */
+int convertADCResults(AdcDef *adc) {
+    if (adc->isProcessing)
+        return HAL_BUSY;
+
+    int32_t value = 0;
+    const uint32_t resolution = ADC_GET_RESOLUTION((ADC_HandleTypeDef *)adc->handle);
+    // reference manual, 11.12.2 ADC_CR1, page 230
+    const uint8_t bits[] = {12, 10, 8, 6};
+    if (resolution >= sizeof(bits))
+        return HAL_ERROR;
+
+    for (size_t i = 0; i < NUMBER_ADC_CHANNELS; ++i) {
+        value = adc->rawValues[i];
+        switch (i) {
+            case ANALOG_TEMP_VREF:
+                // HAL and LL resolution values are the same, so I do not need to use LL_ADC_RESOLUTION_xxB
+                adc->temp = (int16_t) __LL_ADC_CALC_TEMPERATURE(VDD_VALUE, value, resolution);
+                value = 0;
+                break;
+            default:
+                value *= VDD_VALUE;
+                value >>= bits[resolution]; // 0.732mV error is negligible for this case
+                break;
+        }
+
+        adc->value[i] = (uint16_t) value;
+    }
+
+    return HAL_OK;
+}
+
+/**
  * @brief Get the MCU Unique ID
  * @return pointer to a unique id value
  */
