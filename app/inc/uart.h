@@ -22,10 +22,14 @@ enum UART_Errors {
     UART_WRONG_DATA = -2,
     UART_QUEUE_FULL = -3,
     UART_NOT_ALL_DATA = -4,
+    UART_HW_ERROR = -5,
+
+    UART_NUMBER_ERRORS = 5,
 };
 
 typedef struct {
     bool isInit;
+    bool isWaiting;
     bool isHaveData;
     volatile bool isReading;
     volatile bool isWriting;
@@ -33,23 +37,26 @@ typedef struct {
     volatile uint32_t errors;
 
     // rx
-    volatile int32_t time; // msec.
+    volatile uint32_t time; // msec.
     volatile uint16_t size; // bytes
-    uint8_t rxByte;
     uint8_t buffer[UART_BUFFER_SIZE];
 
     // tx
     uint16_t nSent; // bytes
     uint8_t *volatile head;
     uint8_t *tail;
-    uint8_t queue[UART_QUEUE_SIZE];
+    uint8_t queue[UART_QUEUE_SIZE + 4];
 
     void *handle;
 } UARTDef;
 
 int UART_init(UARTDef *uart);
 
-bool UART_isHaveData(const UARTDef *uart);
+bool UART_isHaveData(UARTDef *uart);
+
+const uint8_t *UART_getData(const UARTDef *uart);
+
+uint16_t UART_getDataSize(const UARTDef *uart);
 
 int UART_writeData(UARTDef *uart, const void *data, uint16_t size);
 
