@@ -19,6 +19,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "stm32f4xx_hal.h"
 #include "stm32f4xx_it.h"
 
 #include "variables.h"
@@ -116,6 +117,8 @@ void PendSV_Handler(void) {
   * @retval None
   */
 void SysTick_Handler(void) {
+    Mcu.flags.isSysTickTriggered = true;
+
     HAL_IncTick();
 }
 
@@ -126,18 +129,37 @@ void SysTick_Handler(void) {
 /*  file (startup_stm32f4xx.s).                                               */
 /******************************************************************************/
 
-void TIM1_BRK_TIM9_IRQHandler(void) {
-    HAL_TIM_IRQHandler((TIM_HandleTypeDef *) MCU.timer.obj);
+/**
+ * @brief ADC interrupt handler function
+ */
+void ADC_IRQHandler(void) {
+    HAL_ADC_IRQHandler((ADC_HandleTypeDef *) Mcu.adc.handle);
 }
 
-void USART2_IRQHandler(void) {
-    HAL_UART_IRQHandler((UART_HandleTypeDef *) Terminal.obj);
+/**
+ * @brief General purpose timer interrupt handler function
+ */
+void TIM1_TRG_COM_TIM11_IRQHandler(void) {
+    HAL_TIM_IRQHandler((TIM_HandleTypeDef *) Mcu.measTimer.handle);
 }
 
+/**
+ * @brief USART interrupt handler function
+ */
+void USART1_IRQHandler(void) {
+    HAL_UART_IRQHandler((UART_HandleTypeDef *) Mcu.uart.handle);
+}
+
+/**
+ * @brief I2C events interrupt handler function
+ */
 void I2C3_EV_IRQHandler(void) {
-    HAL_I2C_EV_IRQHandler((I2C_HandleTypeDef *) I2C3Bus.obj);
+    HAL_I2C_EV_IRQHandler((I2C_HandleTypeDef *) Mcu.i2c.handle);
 }
 
+/**
+ * @brief I2C errors interrupt handler function
+ */
 void I2C3_ER_IRQHandler(void) {
-    HAL_I2C_ER_IRQHandler((I2C_HandleTypeDef *) I2C3Bus.obj);
+    HAL_I2C_ER_IRQHandler((I2C_HandleTypeDef *) Mcu.i2c.handle);
 }
