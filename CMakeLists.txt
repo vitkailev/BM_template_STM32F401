@@ -32,7 +32,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         core app/inc system/inc lib/hal/inc)
 target_compile_options(${PROJECT_NAME} PRIVATE
         -mcpu=${CMAKE_SYSTEM_PROCESSOR}
-        $<$<COMPILE_LANGUAGE:C:-std=gnu${CMAKE_C_STANDARD}>:-std=gnu++${CMAKE_CXX_STANDARD}>
+        -std=gnu${CMAKE_C_STANDARD}
         -g -O2
         -mthumb
         -mfpu=fpv4-sp-d16 -mfloat-abi=hard
